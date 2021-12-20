@@ -19,44 +19,34 @@ export default function Chat(props) {
     getUsers();
   }, []);
 
-  // useEffect(() => {
-  //   let socket = socketIOClient("https://is-project-b9.herokuapp.com");
-  //   socket.on("messages", (data) => {
-  //     setNewConversation(data);
-  //   });
-  //   // return () => {
-  //   //   socket.removeListener("messages");
-  //   // };
-  // }, []);
-
   const handleMessageChange = (e) => {
     e.preventDefault();
     setMessage(e.target.value);
   };
 
-  setTimeout(() => {
-    if (selectedUser && selectedUser._id) {
-      axios({
-        method: "GET",
-        url: `https://is-project-b9.herokuapp.com/api/chat/${userId}/${selectedUser._id}`,
-      })
-        .then((response) => {
-          if (response.data.chat !== chat) {
-            let chatM = response.data.chat;
-            chatM.messages.reverse();
-            setChat(chatM);
-          }
-        })
-        .catch((error) => {
-          console.log(error);
-        });
-    }
-  }, 2500);
+  // setTimeout(() => {
+  //   if (selectedUser && selectedUser._id) {
+  //     axios({
+  //       method: "GET",
+  //       url: `https://is-project-b9.herokuapp.com/api/chat/${userId}/${selectedUser._id}`,
+  //     })
+  //       .then((response) => {
+  //         if (response.data.chat !== chat) {
+  //           let chatM = response.data.chat;
+  //           chatM.messages.reverse();
+  //           setChat(chatM);
+  //         }
+  //       })
+  //       .catch((error) => {
+  //         console.log(error);
+  //       });
+  //   }
+  // }, 5000);
 
   const getUsers = () => {
     axios({
       method: "GET",
-      url: "https://is-project-b9.herokuapp.com/api/users",
+      url: "http://localhost:8080/api/users",
     })
       .then((response) => {
         setUsers(response.data.users);
@@ -70,7 +60,7 @@ export default function Chat(props) {
     secondId &&
       axios({
         method: "GET",
-        url: `https://is-project-b9.herokuapp.com/api/chat/${userId}/${secondId}`,
+        url: `http://localhost:8080/api/chat/${userId}/${secondId}`,
       })
         .then((response) => {
           console.log(response.data);
@@ -86,7 +76,7 @@ export default function Chat(props) {
   const addMessage = () => {
     axios({
       method: "POST",
-      url: `https://is-project-b9.herokuapp.com/api/chat/addMessage/${chat._id}`,
+      url: `http://localhost:8080/api/chat/addMessage/${chat._id}`,
       data: {
         sender: userId,
         receiver: selectedUser.id,

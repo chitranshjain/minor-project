@@ -27,7 +27,7 @@ export default function Login() {
   const login = () => {
     axios({
       method: "POST",
-      url: "https://is-project-b9.herokuapp.com/api/login",
+      url: "http://localhost:8080/api/login",
       data: {
         email: credentials.email,
         password: credentials.password,

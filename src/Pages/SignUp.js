@@ -31,7 +31,7 @@ export default function SignUp() {
   const signup = () => {
     axios({
       method: "POST",
-      url: "https://is-project-b9.herokuapp.com/api/signup",
+      url: "http://localhost:8080/api/signup",
       data: {
         name: credentials.name,
         email: credentials.email,
