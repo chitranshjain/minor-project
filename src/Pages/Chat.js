@@ -1,189 +1,129 @@
-import React, { useState, useEffect } from "react";
-import firebase from "firebase";
+import React, { useState, useEffect, useRef } from "react";
 import "./Chat.css";
 import { toast } from "react-toastify";
-import avatar from "../Images/avatar.png"
+import avatar from "../Images/avatar.png";
+import axios from "axios";
 import { useHistory } from "react-router-dom";
 import { ToastContainer } from "react-bootstrap";
+import socketIOClient from "socket.io-client";
 
-export default function Chat() {
-  const db = firebase.firestore();
-  const auth = firebase.auth();
+export default function Chat(props) {
   const history = useHistory();
-  const [messages, setMessages] = useState([]);
-  const [name, setName] = useState("");
+  const [users, setUsers] = useState([]);
+  const [message, setMessage] = useState("");
+  const [selectedUser, setSelectedUser] = useState({});
+  const { userId } = props.match.params;
+  const [chat, setChat] = useState();
 
   useEffect(() => {
-      getChat();
-  }, [])
+    getUsers();
+  }, []);
 
-  const getChat = () => {
-    setMessages([]);
-    auth.onAuthStateChanged((user) => {
-      const uid = user.uid;
-      db.collection("Users")
-        .doc(uid)
-        .get()
-        .then(async (snapshot) => {
-          const nm = snapshot.data().name;
-          setName(nm);
-          const chats = snapshot.data().chat;
-          setMessages(chats); 
-          const chatbox = new Chatbox(chats);
-          chatbox.display(); 
+  // useEffect(() => {
+  //   let socket = socketIOClient("https://is-project-b9.herokuapp.com");
+  //   socket.on("messages", (data) => {
+  //     setNewConversation(data);
+  //   });
+  //   // return () => {
+  //   //   socket.removeListener("messages");
+  //   // };
+  // }, []);
+
+  const handleMessageChange = (e) => {
+    e.preventDefault();
+    setMessage(e.target.value);
+  };
+
+  setTimeout(() => {
+    if (selectedUser) {
+      axios({
+        method: "GET",
+        url: `https://is-project-b9.herokuapp.com/api/chat/${userId}/${selectedUser._id}`,
+      })
+        .then((response) => {
+          if (response.data.chat !== chat) {
+            let chatM = response.data.chat;
+            chatM.messages.reverse();
+            setChat(chatM);
+          }
         })
         .catch((error) => {
-          toast.error("ERROR");
+          console.log(error);
         });
-    });
-  };
-  class Chatbox {
-    constructor(messagess = []) {
-        this.args = {
-            openButton: document.querySelector('.chatbox__button'),
-            chatBox: document.querySelector('.chatbox__support'),
-            sendButton: document.querySelector('.send__button')
-        }
-        this.state = false;
-        this.messages = messagess;
-        console.log(messagess);
-        this.updateChatText(this.args.chatBox);
-
     }
+  }, 1500);
 
-    display() {
-        const {openButton, chatBox, sendButton} = this.args;
-
-        openButton.addEventListener('click', () => this.toggleState(chatBox))
-
-        sendButton.addEventListener('click', () => this.onSendButton(chatBox))
-
-        const node = chatBox.querySelector('input');
-        node.addEventListener("keyup", ({key}) => {
-            if (key === "Enter") {
-                this.onSendButton(chatBox)
-            }
-        })
-    }
-
-    toggleState(chatbox) {
-        this.state = !this.state;
-
-        // show or hides the box
-        if(this.state) {
-            chatbox.classList.add('chatbox--active')
-        } else {
-            chatbox.classList.remove('chatbox--active')
-        }
-    }
-
-    onSendButton(chatbox) {
-        var textField = chatbox.querySelector('input');
-        let text1 = textField.value
-        if (text1 === "") {
-            return;
-        }
-
-        let msg1 = { name: "divyanshu", message: text1};
-        addMessage(text1, "divyanshu");
-        this.messages.push(msg1);
-
-        fetch(
-          "https://api-inference.huggingface.co/models/facebook/blenderbot-400M-distill",
-          {
-            method: "POST",
-            body: JSON.stringify({
-              inputs: {
-                text: text1,
-              },
-            }),
-            mode: "cors",
-            headers: {
-              Authorization: "Bearer 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",
-            },
-          }
-        )
-          .then((r) => r.json())
-          .then((r) => {
-            let msg2 = {name: 'Sam', message: r.generated_text};
-            addMessage(r.generated_text, 'Sam');
-            this.messages.push(msg2);
-            this.updateChatText(chatbox);
-            textField.value = "";
-          })
-          .catch((error) => {
-            console.error("Error:", error);
-            this.updateChatText(chatbox);
-            textField.value = "";
-          });
-    }
-
-    updateChatText(chatbox) {
-        var html = '';
-        this.messages.slice().reverse().forEach(function(item, index) {
-            if (item.name === "Sam" || item.sender == 'Sam')
-            {
-                html += '<div class="messages__item messages__item--visitor">' + item.message + '</div>'
-            }
-            else
-            {
-                html += '<div class="messages__item messages__item--operator">' + item.message + '</div>'
-            }
-          });
-        console.log(chatbox)
-        const chatmessage = chatbox.querySelector('.chatbox__messages');
-        chatmessage.innerHTML = html;
-    }
-}
-
-
-
-
-  const addMessage = ((message, sender) => {
-      auth.onAuthStateChanged((user) => {
-          const uid = user.uid;
-          db.collection("Users").doc(uid).update({
-              chat: firebase.firestore.FieldValue.arrayUnion({message, sender})
-          }).then(() => {
-                console.log("Message Added");
-          }).catch(err => {
-              toast.error("ERROR");
-              console.log("Error");
-          })
-      })
-  });
-
-  const logOut = () => {
-    const auth = firebase.auth();
-    auth.signOut().then(() => {
-      history.push("/");
-    }).catch((error) => {
-      toast.error("An error occurred");
+  const getUsers = () => {
+    axios({
+      method: "GET",
+      url: "https://is-project-b9.herokuapp.com/api/users",
     })
-  }
+      .then((response) => {
+        setUsers(response.data.users);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
+
+  const getChat = (secondId) => {
+    secondId &&
+      axios({
+        method: "GET",
+        url: `https://is-project-b9.herokuapp.com/api/chat/${userId}/${secondId}`,
+      })
+        .then((response) => {
+          console.log(response.data);
+          let chatM = response.data.chat;
+          chatM.messages.reverse();
+          setChat(chatM);
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+  };
+
+  const addMessage = () => {
+    axios({
+      method: "POST",
+      url: `https://is-project-b9.herokuapp.com/api/chat/addMessage/${chat._id}`,
+      data: {
+        sender: userId,
+        receiver: selectedUser.id,
+        message: message,
+      },
+    })
+      .then((response) => {
+        console.log(response.data);
+        setMessage("");
+        getChat(selectedUser.id);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
 
   return (
     <div>
-    <ToastContainer />
+      <ToastContainer />
       <div class="chat-main-container">
         <div class="right-side">
-          <div class="details">
-            <span class="name">Sam</span>
-            <br />
-            <br />
-            <span class="sub-details">LVL 4 | 555 XP | Chatty</span>
-            <br />
-            <span class="sub-text">Frends with {name && name}</span>
-            <br />
-          </div>
-          <div class="avatar">
-            <img src={avatar} />
-          </div>
-          <div class="btn-down">
-            <button style={{border: "none", background: "transparent"}} onClick={logOut} class="link" href="">
-              LOG OUT
-            </button>
-          </div>
+          {users &&
+            users.length > 0 &&
+            users.map((user) => {
+              if (user.id != userId) {
+                return (
+                  <div
+                    onClick={() => {
+                      setSelectedUser(user);
+                      getChat(user.id);
+                    }}
+                  >
+                    <p>{user.name}</p>
+                  </div>
+                );
+              }
+            })}
         </div>
         <div class="chatbox">
           <div class="chatbox__support chatbox--active">
@@ -195,18 +135,34 @@ export default function Chat() {
                 />
               </div>
               <div class="chatbox__content--header">
-                <h4 class="chatbox__heading--header">SAM</h4>
+                {selectedUser ? (
+                  <h4 class="chatbox__heading--header">{selectedUser.name}</h4>
+                ) : (
+                  <h4 class="chatbox__heading--header">SAM</h4>
+                )}
                 <p class="chatbox__description--header">
                   Hi. My name is Sam. How can I help you?
                 </p>
               </div>
             </div>{" "}
             <div class="chatbox__messages">
-              <div class="inner_msg"></div>
+              {chat && chat.messages &&
+                chat.messages.map((chat) => {
+                  return <div class="inner_msg">{chat.message}</div>;
+                })}
             </div>
             <div class="chatbox__footer">
-              <input type="text" placeholder="Write a message..." />
-              <button class="chatbox__send--footer send__button">Send</button>
+              <input
+                type="text"
+                onChange={handleMessageChange}
+                placeholder="Write a message..."
+              />
+              <button
+                onClick={addMessage}
+                class="chatbox__send--footer send__button"
+              >
+                Send
+              </button>
             </div>
           </div>
           <div class="chatbox__button">

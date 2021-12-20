@@ -3,9 +3,10 @@ import { Form } from "react-bootstrap";
 import firebase from "firebase";
 import { reactLocalStorage } from "reactjs-localstorage";
 import { Link, useHistory } from "react-router-dom";
-import avatar from "../Images/avatar.png"
+import avatar from "../Images/avatar.png";
 import "./Login.css";
 import { toast, ToastContainer } from "react-toastify";
+import axios from "axios";
 
 export default function Login() {
   const [credentials, setCredentials] = useState({
@@ -14,8 +15,6 @@ export default function Login() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const history = useHistory();
-  const auth = firebase.auth();
-  const db = firebase.firestore();
 
   const handleChange = (event) => {
     event.preventDefault();
@@ -25,30 +24,23 @@ export default function Login() {
     });
   };
 
-  const handleSignIn = (event) => {
-    event.preventDefault();
-    auth
-      .signInWithEmailAndPassword(credentials.email, credentials.password)
-      .then((userCredentials) => {
-        const uid = userCredentials.user.uid;
-        db.collection("Users")
-          .doc(uid)
-          .get()
-          .then((snapshot) => {
-            if (snapshot) {
-              const data = snapshot.data();
-              if (snapshot.data()) {
-                toast.success("successfully logged in");
-
-                history.push("/chat");
-              } else {
-                history.push("/register");
-              }
-            }
-          });
+  const login = () => {
+    axios({
+      method: "POST",
+      url: "https://is-project-b9.herokuapp.com/api/login",
+      data: {
+        email: credentials.email,
+        password: credentials.password,
+      },
+    })
+      .then((response) => {
+        const userId = response.data.user.id;
+        if(response.status == 200) {
+          history.push(`/chat/${userId}`);
+        }
       })
       .catch((error) => {
-        toast.error("Error : " + error.message);
+        console.log(error);
       });
   };
 
@@ -56,11 +48,10 @@ export default function Login() {
     <div className="admin-login-parent-div">
       <ToastContainer />
       <div className="admin-login-form-div">
-      <img src={avatar} className="mini-icon"></img>
+        <img src={avatar} className="mini-icon"></img>
         <h4>Login To Chat</h4>
         <p>Enter your login details below</p>
         <div className="admin-login-input-div">
-          
           <input
             type="text"
             name="email"
@@ -91,10 +82,18 @@ export default function Login() {
           }}
           label="Show Password"
         />
-        <button onClick={handleSignIn} className="admin-login-btn">
+        <button onClick={login} className="admin-login-btn">
           Login
         </button>
-        <p style={{marginTop: "12px", color: "rgba(0,0,0,0.650)", fontSize: "12px"}}>If you're new here, <Link to="/signup">Sign Up</Link> instead</p>
+        <p
+          style={{
+            marginTop: "12px",
+            color: "rgba(0,0,0,0.650)",
+            fontSize: "12px",
+          }}
+        >
+          If you're new here, <Link to="/signup">Sign Up</Link> instead
+        </p>
       </div>
     </div>
   );

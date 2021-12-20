@@ -3,7 +3,6 @@ import "./App.css";
 import Chat from "./Pages/Chat";
 import Login from "./Pages/Login";
 import SignUp from "./Pages/SignUp";
-import UserRegistration from "./Pages/UserRegistration";
 import "bootstrap/dist/css/bootstrap.css";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -14,8 +13,7 @@ function App() {
         <Switch>
           <Route path="/" exact component={Login} />
           <Route path="/signup" exact component={SignUp} />
-          <Route path="/register" exact component={UserRegistration} />
-          <Route path="/chat" exact component={Chat} />
+          <Route path="/chat/:userId" exact component={Chat} />
         </Switch>
       </Router>
     </div>

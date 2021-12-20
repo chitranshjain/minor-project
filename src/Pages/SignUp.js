@@ -4,13 +4,14 @@ import firebase from "firebase";
 import { reactLocalStorage } from "reactjs-localstorage";
 import { Link, useHistory } from "react-router-dom";
 import avatar from "../Images/avatar.png"
-
+import axios from "axios";
 
 import "./Login.css";
 import { toast, ToastContainer } from "react-toastify";
 
 export default function SignUp() {
   const [credentials, setCredentials] = useState({
+    name: "",
     email: "",
     password: "",
   });
@@ -27,20 +28,24 @@ export default function SignUp() {
     });
   };
 
-  const handleSignUp = (event) => {
-    event.preventDefault();
-    auth
-      .createUserWithEmailAndPassword(credentials.email, credentials.password)
-      .then((userCredentials) => {
-        const uid = userCredentials.user.uid;
-        if (uid) {
-          toast.success("Successfully signed up");
-          setTimeout(() => {
-            history.push("/login");
-          }, 2000);
-        } else {
-          toast.error("Error");
+  const signup = () => {
+    axios({
+      method: "POST",
+      url: "https://is-project-b9.herokuapp.com/api/signup",
+      data: {
+        name: credentials.name,
+        email: credentials.email,
+        password: credentials.password,
+      },
+    })
+      .then((response) => {
+        const userId = response.data.user.id;
+        if(response.status == 200) {
+          history.push(`/chat/${userId}`);
         }
+      })
+      .catch((error) => {
+        console.log(error);
       });
   };
 
@@ -51,6 +56,17 @@ export default function SignUp() {
       <img src={avatar} className="mini-icon"></img>
         <h4>Sign Up Here</h4>
         <p>Enter your details below</p>
+        <div className="admin-login-input-div">
+          <input
+            type="text"
+            name="name"
+            id="name"
+            placeholder="Name"
+            value={credentials.name}
+            onChange={handleChange}
+            className="admin-login-input"
+          ></input>
+        </div>
         <div className="admin-login-input-div">
           <input
             type="text"
@@ -82,7 +98,7 @@ export default function SignUp() {
           }}
           label="Show Password"
         />
-        <button onClick={handleSignUp} className="admin-login-btn">
+        <button onClick={signup} className="admin-login-btn">
           Sign Up
         </button>
         <p style={{marginTop: "12px", color: "rgba(0,0,0,0.650)", fontSize: "12px"}}>If you're an existing user, <Link to="/">Sign In</Link> instead</p>
