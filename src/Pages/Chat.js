@@ -35,7 +35,7 @@ export default function Chat(props) {
   };
 
   setTimeout(() => {
-    if (selectedUser) {
+    if (selectedUser && selectedUser._id) {
       axios({
         method: "GET",
         url: `https://is-project-b9.herokuapp.com/api/chat/${userId}/${selectedUser._id}`,
@@ -51,7 +51,7 @@ export default function Chat(props) {
           console.log(error);
         });
     }
-  }, 1500);
+  }, 2500);
 
   const getUsers = () => {
     axios({
@@ -96,7 +96,6 @@ export default function Chat(props) {
       .then((response) => {
         console.log(response.data);
         setMessage("");
-        getChat(selectedUser.id);
       })
       .catch((error) => {
         console.log(error);
