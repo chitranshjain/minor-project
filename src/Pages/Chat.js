@@ -25,23 +25,11 @@ export default function Chat(props) {
   };
 
   setTimeout(() => {
+    console.log("Fetching chat");
     if (selectedUser && selectedUser._id) {
-      axios({
-        method: "GET",
-        url: `https://is-project-b9.herokuapp.com/api/chat/${userId}/${selectedUser._id}`,
-      })
-        .then((response) => {
-          if (response.data.chat !== chat) {
-            let chatM = response.data.chat;
-            chatM.messages.reverse();
-            setChat(chatM);
-          }
-        })
-        .catch((error) => {
-          console.log(error);
-        });
+      getChat(selectedUser._id);
     }
-  }, 2000);
+  }, 2500);
 
   const getUsers = () => {
     axios({
@@ -135,7 +123,8 @@ export default function Chat(props) {
               </div>
             </div>{" "}
             <div class="chatbox__messages">
-              {chat && chat.messages &&
+              {chat &&
+                chat.messages &&
                 chat.messages.map((chat) => {
                   return <div class="inner_msg">{chat.message}</div>;
                 })}
@@ -143,6 +132,7 @@ export default function Chat(props) {
             <div class="chatbox__footer">
               <input
                 type="text"
+                value={message}
                 onChange={handleMessageChange}
                 placeholder="Write a message..."
               />
