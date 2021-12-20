@@ -24,24 +24,24 @@ export default function Chat(props) {
     setMessage(e.target.value);
   };
 
-  // setTimeout(() => {
-  //   if (selectedUser && selectedUser._id) {
-  //     axios({
-  //       method: "GET",
-  //       url: `https://is-project-b9.herokuapp.com/api/chat/${userId}/${selectedUser._id}`,
-  //     })
-  //       .then((response) => {
-  //         if (response.data.chat !== chat) {
-  //           let chatM = response.data.chat;
-  //           chatM.messages.reverse();
-  //           setChat(chatM);
-  //         }
-  //       })
-  //       .catch((error) => {
-  //         console.log(error);
-  //       });
-  //   }
-  // }, 5000);
+  setTimeout(() => {
+    if (selectedUser && selectedUser._id) {
+      axios({
+        method: "GET",
+        url: `https://is-project-b9.herokuapp.com/api/chat/${userId}/${selectedUser._id}`,
+      })
+        .then((response) => {
+          if (response.data.chat !== chat) {
+            let chatM = response.data.chat;
+            chatM.messages.reverse();
+            setChat(chatM);
+          }
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    }
+  }, 2000);
 
   const getUsers = () => {
     axios({
